@@ -28,20 +28,21 @@ def read_status(key:str):
             print("Retrieved item:", item)
         else:
             print("Item not found.")
-        return item
+        return item['token']['S']
     except Exception as e:
         print("Error retrieving item:", e)  
     return None
 
 def lambda_handler(event, context):
     print(event)
+    rawQueryString = event['rawQueryString']
     if len(rawQueryString) <=5:
         return {
             'statusCode': 404,
             'body': json.dumps('miss rawQueryString')
         }
     
-    rawQueryString = event['rawQueryString']
+    
     query_parts = rawQueryString.split('&')
     uuidp=query_parts[0]
     behaviourp=query_parts[1]
@@ -77,7 +78,7 @@ def lambda_handler(event, context):
             }
         else:
             params = {
-                'output': '"拒绝流程."',
+                'error': '"拒绝流程."',
                 'taskToken': token
             }
             sfn.send_task_failure(**params)
