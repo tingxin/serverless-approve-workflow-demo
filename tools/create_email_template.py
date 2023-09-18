@@ -11,7 +11,8 @@ html_template = """
 <head></head>
 <body>
   <h3>{{content}}</h3>
-  <p>点击这里 <a href="{{link}}">批准申请</a>.</p>
+  <p>点击这里 <a href="{{link1}}">批准申请</a>.</p>
+  <p>点击这里 <a href="{{link2}}">拒绝申请</a>.</p>
 </body>
 </html>
 """
@@ -19,7 +20,9 @@ html_template = """
 text_template = """
 {{content}}\r\n
 点击这里批准申请:\r\n
-{{link}}
+{{link1}}
+点击这里拒绝申请:\r\n
+{{link2}}
 """
 
 ses = boto3.client('ses')
@@ -27,7 +30,7 @@ ses = boto3.client('ses')
 response = ses.create_template(
     
         Template={
-            "TemplateName": "approve_template",
+            "TemplateName": "approve_workflow_template2",
             "SubjectPart": "{{subject}}!",
             "HtmlPart": html_template,
             "TextPart": text_template

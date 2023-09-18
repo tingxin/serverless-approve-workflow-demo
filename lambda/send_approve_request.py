@@ -1,13 +1,18 @@
 import imp
+from operator import truediv
 import boto3
 import json
 from botocore.exceptions import ClientError
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import uuid
+
+
 
 recipient_email = ['friendship-119@163.com']
 source_email = "tingxinxu@nwcdcloud.cn"
-template_name = 'approve_template'
+template_name = 'approve_workflow_template2'
+table_name = 'approve_workflow_rec'
 
 class SesDestination:
     """Contains data about an email destination."""
@@ -80,7 +85,32 @@ class SesMailSender:
         else:
             return message_id
 
-    
+def sync_status(key:str, token:str):
+    dynamodb = boto3.client('dynamodb')
+
+    # DynamoDB 表的名称
+
+
+    # 准备要写入表的数据
+    data_to_insert = {
+        'key': {'S': key},
+        'token': {'S': token}
+    }
+
+    try:
+        # 写入数据到 DynamoDB 表
+        response = dynamodb.put_item(
+            TableName=table_name,
+            Item=data_to_insert
+        )
+       
+        print("Item added successfully:", response)
+        return True
+    except Exception as e:
+        print("Error adding item:", e)
+        return False
+
+
 def lambda_handler(event, context):
     # TODO implement
 
@@ -94,17 +124,24 @@ def lambda_handler(event, context):
         title = message_body['title']
         server_url = message_body['server']
 
-        m = SesMailSender(ses)
+        # 创建一个随机的 UUID
+        random_uuid = str(uuid.uuid4())
 
-        t_data ={
-            'subject':title,
-            'content':request_info,
-            'link':f'{server_url}/{task_token}'
-            }
+        if sync_status(random_uuid, task_token):
 
-        m.send_templated_email(source_email, 
-                            SesDestination(recipient_email),
-                            template_name,
-                            t_data)
+            m = SesMailSender(ses)
+
+
+            t_data ={
+                'subject':title,
+                'content':request_info,
+                'link1':f'{server_url}?token={random_uuid}&behaviour=1',
+                'link2':f'{server_url}?token={random_uuid}&behaviour=0'
+                }
+
+            m.send_templated_email(source_email, 
+                                SesDestination(recipient_email),
+                                template_name,
+                                t_data)
 
     return {}
