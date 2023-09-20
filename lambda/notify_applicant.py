@@ -3,13 +3,13 @@ import json
 from botocore.exceptions import ClientError
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import urllib.parse
+import uuid
+
 
 
 recipient_email = ['friendship-119@163.com']
 source_email = "tingxinxu@nwcdcloud.cn"
-template_name = 'approve_workflow_template2'
-table_name = 'approve_workflow_rec2'
+mail_template_name = 'approve_workflow_result'
 
 class SesDestination:
     """Contains data about an email destination."""
@@ -83,36 +83,23 @@ class SesMailSender:
             return message_id
 
 def lambda_handler(event, context):
-    # TODO implement
-
+    behaviour= event['behaviour']
     ses = boto3.client('ses')
     m = SesMailSender(ses)
-
-    for record in event['Records']:
-        message_body = json.loads(record['body'])
-       
-        task_token = message_body['TaskToken']
-        request_info = message_body['request']
-        title = message_body['title']
-        server_url = message_body['server']
-        print(task_token)
-
-        # 对查询字符串进行 URL 编码
-        encoded_token = urllib.parse.quote(task_token)
-
-
-
-
+    if behaviour:
         t_data ={
-                'subject':title,
-                'content':request_info,
-                'link1':f'{server_url}?token={encoded_token}&behaviour=1',
-                'link2':f'{server_url}?token={encoded_token}&behaviour=0'
+                'subject':'申请批复通知',
+                'content':'您的申请已经被同意！'
+            }
+        
+    else:
+        t_data ={
+                'subject':'申请批复通知',
+                'content':'您的申请已经被拒绝！'
             }
 
-        m.send_templated_email(source_email, 
-                                SesDestination(recipient_email),
-                                template_name,
-                                t_data)
+    m.send_templated_email(source_email, 
+            SesDestination(recipient_email),
+            mail_template_name,
+            t_data)
 
-    return {}

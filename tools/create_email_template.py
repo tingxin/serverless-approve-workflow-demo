@@ -1,4 +1,3 @@
-import imp
 import boto3
 import json
 from botocore.exceptions import ClientError
@@ -6,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 
-html_template = """
+html_template1 = """
 <html>
 <head></head>
 <body>
@@ -17,7 +16,7 @@ html_template = """
 </html>
 """
 
-text_template = """
+text_template1 = """
 {{content}}\r\n
 点击这里批准申请:\r\n
 {{link1}}
@@ -25,15 +24,28 @@ text_template = """
 {{link2}}
 """
 
+html_template2 = """
+<html>
+<head></head>
+<body>
+  <h3>{{content}}</h3>
+</body>
+</html>
+"""
+
+text_template2 = """
+{{content}}\r\n
+"""
+
 ses = boto3.client('ses')
 
 response = ses.create_template(
     
         Template={
-            "TemplateName": "approve_workflow_template2",
+            "TemplateName": "approve_workflow_result",
             "SubjectPart": "{{subject}}!",
-            "HtmlPart": html_template,
-            "TextPart": text_template
+            "HtmlPart": html_template2,
+            "TextPart": text_template2
         }
     
 )
